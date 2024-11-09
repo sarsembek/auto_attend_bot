@@ -86,9 +86,14 @@ async def launch_script(message: types.Message):
         await message.reply(f"Запускаем авто отметку с продолжительностью {default_duration} минут. Ждите...", reply_markup=cancel_keyboard)
         try:
             # Запуск процесса Selenium
-            process = subprocess.Popen(
-                ["python", "auto_attend.py", username, password, str(default_duration)]
-            )
+            process = subprocess.Popen([
+                "python", "auto_attend.py", 
+                username, password, 
+                str(default_duration), 
+                str(message.from_user.id), 
+                os.getenv("API_TOKEN")
+            ])
+
             selenium_processes[user_id] = process
         except Exception as e:
             await message.reply(f"Ошибка при запуске: {e}", reply_markup=main_keyboard)
