@@ -20,4 +20,4 @@ EXPOSE 80
 ENV NAME World
 
 # Run bot.py when the container launches
-CMD ["python", "app/bot.py"]
+CMD ["python", "bot.py"]
