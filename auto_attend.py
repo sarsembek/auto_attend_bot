@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 WAIT_TIME = 10
 UPDATE_INTERVAL = 60
-SHOW_UI = True
+SHOW_UI = False
 
 # Функция для отправки уведомления через Telegram
 def send_notification(chat_id, bot_token, message):
