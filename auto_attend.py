@@ -12,9 +12,9 @@ from db import get_user_credentials
 from bot import send_notification  # Import the function from bot.py
 
 # Configuration Constants
-WAIT_TIME = 10
+WAIT_TIME = 20  # Increased wait time
 UPDATE_INTERVAL = 60
-SHOW_UI = False
+SHOW_UI = True
 
 # Function to attempt attendance
 def try_to_attend(driver, chat_id, bot_token):
@@ -41,27 +41,42 @@ def try_to_attend(driver, chat_id, bot_token):
                 send_notification(chat_id, "Attendance successful!")
     except TimeoutException:
         send_notification(chat_id, "Timeout reached, could not mark attendance.")
+        print("Timeout reached, could not mark attendance.")
     except Exception as e:
         print(f"Error during attendance attempt: {e}")
         send_notification(chat_id, f"Error during attendance attempt: {e}")
 
 # Function to login to the website
-def login(driver, username, password):
-    wait = WebDriverWait(driver, WAIT_TIME)
+def login(selenium_driver, username, password):
+    wait = WebDriverWait(selenium_driver, WAIT_TIME)
 
     username_input = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@type="text"]')))
-    username_input.clear()
-    username_input.send_keys(username)
+    if username_input is not None:
+        username_input.clear()
+        username_input.send_keys(username)
+
+    time.sleep(1)
 
     password_input = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@type="password"]')))
-    password_input.send_keys(password)
+    if password_input is not None:
+        password_input.send_keys(password)
 
-    checkbox = wait.until(EC.presence_of_element_located((By.XPATH, '//input[@type="checkbox"]')))
-    driver.execute_script("arguments[0].parentElement.click();", checkbox)
+    checkbox = wait.until(
+        EC.presence_of_element_located(
+            (By.XPATH, '//input[@type="checkbox"]')
+        )
+    )
+    parent_element = selenium_driver.execute_script("return arguments[0].parentElement;", checkbox)
+    if parent_element is not None:
+        parent_element.click()
 
-    submit_button = wait.until(EC.presence_of_element_located(
-        (By.XPATH, '//div[@role="button" and contains(@class, "v-button-primary")]')))
-    submit_button.click()
+    submit_button = wait.until(
+        EC.presence_of_element_located(
+            (By.XPATH, '//div[@role="button" and contains(@class, "v-button-primary")]')
+        )
+    )
+    if submit_button is not None:
+        submit_button.click()
 
 # Main function to control the bot
 def main(username, password, duration, chat_id, bot_token):
