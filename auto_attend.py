@@ -8,24 +8,13 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from db import get_user_credentials
+from bot import send_notification  # Import the function from bot.py
 
 # Configuration Constants
 WAIT_TIME = 10
 UPDATE_INTERVAL = 60
 SHOW_UI = False
-
-# Function to send notifications via Telegram
-def send_notification(chat_id, bot_token, message):
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": message
-    }
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending notification: {e}")
 
 # Function to attempt attendance
 def try_to_attend(driver, chat_id, bot_token):
@@ -49,12 +38,12 @@ def try_to_attend(driver, chat_id, bot_token):
             if button_div:
                 button_div.click()
                 time.sleep(1)
-                send_notification(chat_id, bot_token, "Attendance successful!")
+                send_notification(chat_id, "Attendance successful!")
     except TimeoutException:
-        send_notification(chat_id, bot_token, "Timeout reached, could not mark attendance.")
+        send_notification(chat_id, "Timeout reached, could not mark attendance.")
     except Exception as e:
         print(f"Error during attendance attempt: {e}")
-        send_notification(chat_id, bot_token, f"Error during attendance attempt: {e}")
+        send_notification(chat_id, f"Error during attendance attempt: {e}")
 
 # Function to login to the website
 def login(driver, username, password):
@@ -100,11 +89,11 @@ def main(username, password, duration, chat_id, bot_token):
             driver.refresh()
 
     except Exception as e:
-        send_notification(chat_id, bot_token, f"An error occurred in the main loop: {e}")
+        send_notification(chat_id, f"An error occurred in the main loop: {e}")
         print(f"Error in main loop: {e}")
     finally:
         driver.quit()
-        send_notification(chat_id, bot_token, "Script execution finished.")
+        send_notification(chat_id, "Script execution finished.")
 
 # Entry point of the script
 if __name__ == "__main__":
@@ -117,5 +106,11 @@ if __name__ == "__main__":
     DURATION = int(sys.argv[3])
     CHAT_ID = sys.argv[4]
     BOT_TOKEN = sys.argv[5]
+
+    # Check if the user exists in the database
+    if not get_user_credentials(CHAT_ID):
+        print("User does not exist in the database.")
+        send_notification(CHAT_ID, "User does not exist in the database.")
+        sys.exit(1)
 
     main(USERNAME, PASSWORD, DURATION, CHAT_ID, BOT_TOKEN)
