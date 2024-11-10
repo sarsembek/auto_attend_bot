@@ -115,5 +115,8 @@ def approve_user_request(request_id):
         user_id, username, password = request
         save_user_credentials(user_id, username, password)
         cursor.execute("UPDATE requests SET status = 'approved' WHERE request_id = ?", (request_id,))
-    conn.commit()
+        conn.commit()
+        conn.close()
+        return user_id, username
     conn.close()
+    return None, None

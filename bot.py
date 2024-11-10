@@ -300,19 +300,25 @@ async def view_requests(message: types.Message, state: FSMContext):
         request_info = f"Request ID: {req[0]}, User ID: {req[1]}, Username: {req[2]}, Status: {req[4]}"
         approve_button = InlineKeyboardButton(text="Approve", callback_data=f"approve_{req[0]}")
         reject_button = InlineKeyboardButton(text="Reject", callback_data=f"reject_{req[0]}")
-        inline_kb = InlineKeyboardMarkup().add(approve_button, reject_button)
+        inline_kb = InlineKeyboardMarkup(inline_keyboard=[[approve_button, reject_button]])
         await message.reply(request_info, reply_markup=inline_kb)
 
+# Handle inline button callbacks
 @dp.callback_query(lambda c: c.data and c.data.startswith('approve_'))
 async def approve_request(callback_query: types.CallbackQuery):
     request_id = int(callback_query.data.split('_')[1])
-    approve_user_request(request_id)
-    await callback_query.answer(text=f"Request ID {request_id} has been approved.")
-    await bot.send_message(callback_query.from_user.id, f"Request ID {request_id} has been approved.")
+    user_id, username = approve_user_request(request_id)
+    if user_id:
+        await callback_query.answer(text=f"Request ID {request_id} has been approved.")
+        await bot.send_message(callback_query.from_user.id, f"Request ID {request_id} has been approved.")
+        await bot.send_message(user_id, f"Your request has been approved. Welcome, {username}!")
+    else:
+        await callback_query.answer(text=f"Request ID {request_id} could not be approved.")
 
 @dp.callback_query(lambda c: c.data and c.data.startswith('reject_'))
 async def reject_request(callback_query: types.CallbackQuery):
     request_id = int(callback_query.data.split('_')[1])
+    # Implement the logic to reject the request if needed
     await callback_query.answer(text=f"Request ID {request_id} has been rejected.")
     await bot.send_message(callback_query.from_user.id, f"Request ID {request_id} has been rejected.")
 
